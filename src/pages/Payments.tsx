@@ -1,8 +1,7 @@
-import { CreditCard, Plus, Banknote } from 'lucide-react';
+import { CreditCard, Banknote } from 'lucide-react';
 import { usePayments } from '@/hooks/usePayments';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ButtonLink } from '@/components/ui/ButtonLink';
 import { PageLoader } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatCurrency, formatDate, humanize } from '@/lib/format';
@@ -24,10 +23,6 @@ export default function Payments() {
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Payments</h1>
           <p className="text-sm text-slate-500">Your payment history.</p>
         </div>
-        <ButtonLink to="/payments/new">
-          <Plus className="h-4 w-4" />
-          Make Payment
-        </ButtonLink>
       </div>
 
       {list.length > 0 && (
@@ -44,7 +39,6 @@ export default function Payments() {
           icon={CreditCard}
           title="No payments yet"
           description="Your payments will appear here once recorded."
-          action={<ButtonLink to="/payments/new">Make a payment</ButtonLink>}
         />
       ) : (
         <div className="space-y-3">

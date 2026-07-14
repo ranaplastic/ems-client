@@ -1,0 +1,71 @@
+name: Build
+
+# CI for the Client Portal.
+#   feature/**  -> build + test only (no publish)
+#   develop     -> build + test + publish build artifact (integration)
+#   main        -> build + test + publish build artifact (consumed by Deploy)
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          # Configure these under Settings -> Secrets and variables -> Actions.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_STORAGE_SECRET: ${{ secrets.VITE_STORAGE_SECRET }}
+          VITE_USE_MOCK: ${{ vars.VITE_USE_MOCK }}
+          # Project Pages are served from https://<owner>.github.io/<repo>/
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      # Publish the production build only on develop and main (mirrors the
+      # backend's "publish image only on develop/main" rule). The main artifact
+      # is consumed by the Deploy workflow.
+      - name: Upload build artifact
+        if: github.event_name == 'push' && (github.ref_name == 'develop' || github.ref_name == 'main')
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: dist
+          retention-days: 7
+
+  test:
+    name: Test (lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint

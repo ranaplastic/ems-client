@@ -16,7 +16,6 @@ export const api = axios.create({
 });
 
 if (USE_MOCK && import.meta.env.DEV) {
-  // eslint-disable-next-line no-console
   console.info('[EMS] Running with MOCK data (VITE_USE_MOCK=true). Demo Client ID: 1001 / phone 9876543210');
 }
 

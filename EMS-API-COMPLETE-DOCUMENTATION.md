@@ -11,6 +11,7 @@
 8. [Testing Strategy](#testing-strategy)
 9. [Configuration](#configuration)
 10. [Deployment Guide](#deployment-guide)
+11. [CI/CD Pipeline](#-cicd-pipeline)
 
 ---
 
@@ -1460,7 +1461,89 @@ curl http://localhost:8080/api/v1/clients
 
 ---
 
-## 📚 Additional Resources
+## � CI/CD Pipeline
+
+The project uses **GitHub Actions** for continuous integration and deployment. All
+workflows live under `.github/workflows/`.
+
+### Branching Strategy
+```
+feature/**  ──PR──▶  develop  ──PR──▶  main  ──auto-deploy──▶  production
+```
+- `feature/**` — day-to-day work; build + test only (no image publish).
+- `develop` — integration branch; build + test + publish integration image to GHCR.
+- `main` — **production branch**; build + test + publish `:latest` image, then auto-deploy.
+
+> **Production deploys happen from `main` ONLY.** There is no manual deploy trigger.
+
+### Workflows
+
+#### 1. `build.yml` — Build (CI)
+Triggers on pushes to `main`, `develop`, `feature/**`, and PRs to `main`/`develop`.
+
+| Stage | Action |
+|-------|--------|
+| Build | `./mvnw clean package -DskipTests`, uploads JAR artifact |
+| Test | `./mvnw test`, uploads Surefire reports |
+| Docker | Builds & pushes image to **GHCR** — only on pushes to `develop` and `main`. The `:latest` tag is published **only from `main`**. |
+
+Image registry: `ghcr.io/ranaplastic/ems-api`
+
+#### 2. `deploy.yml` — Deploy (CD, main only)
+- **Trigger:** `workflow_run` — runs automatically after **Build** completes
+  **successfully** on `main` (`branches: [main]`).
+- **Guard:** job runs only if `workflow_run.conclusion == 'success'` **and**
+  `workflow_run.head_branch == 'main'`.
+- **Target:** deploys the `:latest` image over SSH to the AWS Lightsail host.
+- **Environment:** `production` (holds the deployment secrets).
+- **Health gate:** polls `/actuator/health` after `docker compose up`; the job fails
+  if the app never reports `UP`.
+- Records the current image in `.deployed_image` (and prior one in `.previous_image`)
+  on the server so a rollback can revert.
+
+#### 3. `rollback.yml` — Rollback
+- **Automatic:** runs when the **Deploy** workflow finishes with a **failure**,
+  reverting to the last known-good image recorded on the server.
+- **Manual:** `workflow_dispatch` with an optional `image_tag` to roll back to a
+  specific version.
+
+### GitHub Environment & Secrets
+
+A `production` environment (Settings → Environments) holds the deploy secrets:
+
+| Secret | Purpose |
+|--------|---------|
+| `LIGHTSAIL_HOST` | Server IP / hostname (`13.205.6.156` or `ems.ranaplastics.com`) |
+| `LIGHTSAIL_USER` | SSH user (`deploy`) |
+| `LIGHTSAIL_SSH_KEY` | Private SSH key whose public key is in `~deploy/.ssh/authorized_keys` |
+
+> Required-reviewer approval gates need a public repo or a paid plan (Pro/Team/Enterprise)
+> for private repos. As a free alternative, restrict the environment’s
+> **Deployment branches** to `main` (belt-and-suspenders with the workflow branch guard).
+
+### Deployment Flow (main → production)
+```
+Merge PR into main
+    ↓
+Build workflow: test + publish ghcr.io/.../ems-api:latest
+    ↓ (on success, main only)
+Deploy workflow: SSH to Lightsail → docker compose pull + up
+    ↓
+Health check /actuator/health
+    ↓                         ↘ (fails)
+  UP → done                Rollback workflow → previous image
+```
+
+### Server Layout (AWS Lightsail)
+- Path: `/opt/rana-plastics/ems-api` (owned by `deploy`, member of `docker` group)
+- Stack: nginx (80/443) → ems-api (`127.0.0.1:8080`) → mysql (internal) — see
+  `docker-compose.yml`
+- Domain: `ems.ranaplastics.com`; TLS via Let's Encrypt (certbot auto-renew). Bootstrap
+  certs once with `scripts/init-letsencrypt.sh`.
+
+---
+
+## �📚 Additional Resources
 
 ### Documentation Files
 - `TEST_FAILURES_FIXED_REPORT.md` - Unit test fixes
