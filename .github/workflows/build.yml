@@ -37,8 +37,8 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_STORAGE_SECRET: ${{ secrets.VITE_STORAGE_SECRET }}
           VITE_USE_MOCK: ${{ vars.VITE_USE_MOCK }}
-          # Project Pages are served from https://<owner>.github.io/<repo>/
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          # Served from the custom domain root (public/CNAME -> app.ranaplastics.com)
+          VITE_BASE_PATH: /
         run: npm run build
 
       # Publish the production build only on develop and main (mirrors the
