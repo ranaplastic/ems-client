@@ -25,4 +25,16 @@ export const ordersApi = {
 
   cancel: (id: number) =>
     api.post<Order>(`/orders/${id}/cancel`).then((r) => normaliseOrder(r.data)),
+
+  /**
+   * Download the invoice PDF for an order. Backend exposes
+   * `GET /orders/{id}/pdf` returning `application/pdf`.
+   */
+  downloadInvoice: (id: number) =>
+    api
+      .get<Blob>(`/orders/${id}/pdf`, {
+        responseType: 'blob',
+        headers: { Accept: 'application/pdf' },
+      })
+      .then((r) => r.data),
 };

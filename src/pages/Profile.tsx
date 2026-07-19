@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { User, Phone, Mail, MapPin, Save, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User, Phone, Mail, MapPin, Save } from 'lucide-react';
 import { clientsApi } from '@/api/clients';
 import { extractErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/store/authStore';
@@ -10,10 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Input';
 
 export default function Profile() {
-  const navigate = useNavigate();
   const client = useAuthStore((s) => s.client);
   const setClient = useAuthStore((s) => s.setClient);
-  const logout = useAuthStore((s) => s.logout);
 
   const [name, setName] = useState(client?.name ?? '');
   const [phoneNo, setPhoneNo] = useState(client?.phoneNo ?? '');
@@ -43,11 +40,6 @@ export default function Profile() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
   };
 
   return (
@@ -117,11 +109,6 @@ export default function Profile() {
           </Button>
         </CardBody>
       </Card>
-
-      <Button variant="outline" fullWidth onClick={handleLogout} className="text-red-600">
-        <LogOut className="h-4 w-4" />
-        Sign Out
-      </Button>
     </div>
   );
 }
