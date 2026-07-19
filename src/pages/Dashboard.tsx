@@ -16,7 +16,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { PageLoader } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 export default function Dashboard() {
   const client = useAuthStore((s) => s.client);
@@ -28,7 +28,13 @@ export default function Dashboard() {
   const list = orders ?? [];
   const openOrders = list.filter((o) => o.status === 'CREATED').length;
   const completedOrders = list.filter((o) => o.status === 'COMPLETED').length;
-  const outstanding = receivable?.totalDue ?? 0;
+  // Outstanding = unpaid balance across every non-cancelled order.
+  // The server-side receivable only tracks COMPLETED orders, so we fall back
+  // to the live order list to include CREATED orders that still owe money.
+  const outstandingFromOrders = list
+    .filter((o) => o.status !== 'CANCELLED')
+    .reduce((sum, o) => sum + Math.max(0, (o.totalAmount ?? 0) - (o.paidAmount ?? 0)), 0);
+  const outstanding = Math.max(receivable?.totalDue ?? 0, outstandingFromOrders);
   const recent = [...list]
     .sort((a, b) => b.orderId - a.orderId)
     .slice(0, 5);
@@ -93,7 +99,9 @@ export default function Dashboard() {
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-900">Order #{order.orderId}</p>
-                      <p className="text-xs text-slate-400">{formatDate(order.date)}</p>
+                      <p className="text-xs text-slate-400">
+                        {order.orderBooks?.length ?? 0} item{(order.orderBooks?.length ?? 0) === 1 ? '' : 's'}
+                      </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">

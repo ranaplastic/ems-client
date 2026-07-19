@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, XCircle, Package } from 'lucide-react';
+import { ArrowLeft, XCircle, Package, Download } from 'lucide-react';
 import { useOrder, useCancelOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { extractErrorMessage } from '@/api/client';
+import { ordersApi } from '@/api/orders';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -21,6 +22,7 @@ export default function OrderDetail() {
   const { data: products } = useProducts();
   const cancelOrder = useCancelOrder();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   if (isLoading) return <PageLoader label="Loading order…" />;
 
@@ -45,6 +47,26 @@ export default function OrderDetail() {
       setConfirmOpen(false);
     } catch (err) {
       toast.error(extractErrorMessage(err));
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    setDownloading(true);
+    try {
+      const blob = await ordersApi.downloadInvoice(orderId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-order-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded.');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -102,6 +124,18 @@ export default function OrderDetail() {
           </ul>
         </CardBody>
       </Card>
+
+      {order.status !== 'CANCELLED' && (
+        <Button
+          variant="outline"
+          fullWidth
+          loading={downloading}
+          onClick={handleDownloadInvoice}
+        >
+          <Download className="h-4 w-4" />
+          Download Invoice (PDF)
+        </Button>
+      )}
 
       {order.status === 'CREATED' && (
         <div className="flex flex-col gap-3 sm:flex-row">
