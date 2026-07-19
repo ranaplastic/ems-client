@@ -1,9 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import type { ApiError } from '@/types';
+import { apiBaseUrl, activeProfile, useMock } from '@/config';
 import { mockAdapter } from './mock/adapter';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const BASE_URL = apiBaseUrl;
+const USE_MOCK = useMock;
 
 /** Shared Axios instance for the EMS API. */
 export const api = axios.create({
@@ -15,8 +16,11 @@ export const api = axios.create({
   ...(USE_MOCK ? { adapter: mockAdapter } : {}),
 });
 
-if (USE_MOCK && import.meta.env.DEV) {
-  console.info('[EMS] Running with MOCK data (VITE_USE_MOCK=true). Demo Client ID: 1001 / phone 9876543210');
+if (import.meta.env.DEV) {
+  console.info(
+    `[EMS] profile=${activeProfile} · api=${BASE_URL}` +
+      (USE_MOCK ? ' · MOCK data (demo login 1001 / 9876543210)' : ''),
+  );
 }
 
 /**

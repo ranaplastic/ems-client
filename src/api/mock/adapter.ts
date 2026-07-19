@@ -125,7 +125,7 @@ export const mockAdapter: AxiosAdapter = (config) => {
       status: 'CREATED',
       paidAmount: 0,
       totalAmount: 0,
-      orderBooks: body.orderBooks.map((line) => {
+      orderBooks: body.items.map((line) => {
         const product = mockProducts.find((p) => p.productId === line.productId);
         const lineTotal = Number((line.quantity * line.rate).toFixed(2));
         return {
@@ -163,6 +163,18 @@ export const mockAdapter: AxiosAdapter = (config) => {
     if (order.status !== 'CREATED') return fail(409, 'Only open orders can be cancelled', config);
     order.status = 'CANCELLED';
     return ok(order, config);
+  }
+
+  const orderInvoice = url.match(/^\/orders\/(\d+)\/pdf$/);
+  if (orderInvoice && method === 'get') {
+    const order = mockOrders.find((o) => o.orderId === Number(orderInvoice[1]));
+    if (!order) return fail(404, 'Order not found', config);
+    // Return a minimal placeholder PDF blob for demo mode.
+    const pdfBytes = new Uint8Array([
+      0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a, // %PDF-1.4\n
+    ]);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    return ok(blob as unknown as Order, config);
   }
 
   const orderById = url.match(/^\/orders\/(\d+)$/);

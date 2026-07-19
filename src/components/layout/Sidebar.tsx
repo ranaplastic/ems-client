@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, CreditCard, Wallet, User } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, CreditCard, Wallet } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export const NAV_ITEMS = [
@@ -8,7 +8,6 @@ export const NAV_ITEMS = [
   { to: '/orders', label: 'Orders', icon: ShoppingCart },
   { to: '/payments', label: 'Payments', icon: CreditCard },
   { to: '/receivables', label: 'Balance', icon: Wallet },
-  { to: '/profile', label: 'Profile', icon: User },
 ] as const;
 
 /** Desktop sidebar navigation (hidden on mobile). */

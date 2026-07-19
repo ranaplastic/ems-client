@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown, User } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 /** Top header with client identity and logout. */
@@ -54,8 +54,18 @@ export function Header() {
                 </p>
               </div>
               <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/profile');
+                }}
+                className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </button>
+              <button
                 onClick={handleLogout}
-                className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out

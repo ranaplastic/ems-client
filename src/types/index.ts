@@ -80,7 +80,8 @@ export interface CreateOrderLine {
 export interface CreateOrderRequest {
   clientId: number;
   date: string; // ISO date (yyyy-MM-dd)
-  orderBooks: CreateOrderLine[];
+  /** Backend DTO field name for order line items. */
+  items: CreateOrderLine[];
 }
 
 export interface CreatePaymentRequest {
