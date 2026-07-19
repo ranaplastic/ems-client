@@ -1,7 +1,6 @@
-import { Wallet, CheckCircle2, CreditCard } from 'lucide-react';
+import { Wallet, CheckCircle2 } from 'lucide-react';
 import { useReceivable } from '@/hooks/useReceivable';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import { ButtonLink } from '@/components/ui/ButtonLink';
 import { PageLoader } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatCurrency } from '@/lib/format';
@@ -53,10 +52,6 @@ export default function Receivables() {
           </div>
           <p className="mt-3 text-sm text-slate-500">Total Outstanding</p>
           <p className="mt-1 text-3xl font-bold text-slate-900">{formatCurrency(totalDue)}</p>
-          <ButtonLink to="/payments/new" className="mt-4 inline-flex">
-            <CreditCard className="h-4 w-4" />
-            Pay Now
-          </ButtonLink>
         </CardBody>
       </Card>
 

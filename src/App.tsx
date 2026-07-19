@@ -8,7 +8,6 @@ import Orders from '@/pages/Orders';
 import OrderDetail from '@/pages/OrderDetail';
 import CreateOrder from '@/pages/CreateOrder';
 import Payments from '@/pages/Payments';
-import CreatePayment from '@/pages/CreatePayment';
 import Receivables from '@/pages/Receivables';
 import Profile from '@/pages/Profile';
 import NotFound from '@/pages/NotFound';
@@ -27,7 +26,7 @@ export default function App() {
             <Route path="/orders/new" element={<CreateOrder />} />
             <Route path="/orders/:id" element={<OrderDetail />} />
             <Route path="/payments" element={<Payments />} />
-            <Route path="/payments/new" element={<CreatePayment />} />
+            <Route path="/payments/new" element={<Navigate to="/payments" replace />} />
             <Route path="/receivables" element={<Receivables />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

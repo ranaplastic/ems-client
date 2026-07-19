@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, CreditCard, XCircle, Package } from 'lucide-react';
+import { ArrowLeft, XCircle, Package } from 'lucide-react';
 import { useOrder, useCancelOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { extractErrorMessage } from '@/api/client';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { ButtonLink } from '@/components/ui/ButtonLink';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -106,16 +105,6 @@ export default function OrderDetail() {
 
       {order.status === 'CREATED' && (
         <div className="flex flex-col gap-3 sm:flex-row">
-          {balanceDue > 0 && (
-            <ButtonLink
-              to="/payments/new"
-              state={{ orderId: order.orderId, amount: balanceDue }}
-              fullWidth
-            >
-              <CreditCard className="h-4 w-4" />
-              Pay {formatCurrency(balanceDue)}
-            </ButtonLink>
-          )}
           <Button variant="danger" fullWidth onClick={() => setConfirmOpen(true)}>
             <XCircle className="h-4 w-4" />
             Cancel Order

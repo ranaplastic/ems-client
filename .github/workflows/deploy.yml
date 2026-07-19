@@ -1,58 +1,82 @@
-name: Deploy Client Portal to GitHub Pages
+name: Deploy to GitHub Pages
 
+# Production deploys happen from main ONLY. This runs automatically after the
+# Build workflow finishes successfully on main (same pattern as the backend CD).
 on:
-  push:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
     branches: [main]
+  # Manual re-deploy (rebuilds main from scratch).
   workflow_dispatch:
 
-# Allow the workflow to publish to GitHub Pages
+# Allow the workflow to publish to GitHub Pages and read the Build artifact.
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
-# Ensure only one deployment runs at a time
+# Ensure only one Pages deployment runs at a time
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
+    name: Deploy
+    # Guard: only deploy on a successful Build of main (or a manual dispatch).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # ── Auto path: reuse the artifact published by the Build workflow ──
+      - name: Download build artifact from Build workflow
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: site-dist
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Manual path: no upstream run, so rebuild main here ──
       - name: Checkout
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
 
       - name: Setup Node
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch'
         run: npm ci
 
       - name: Build
+        if: github.event_name == 'workflow_dispatch'
         env:
-          # Configure these as repository "Variables" / "Secrets" in
-          # Settings → Secrets and variables → Actions.
+          VITE_PROFILE: prod
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_STORAGE_SECRET: ${{ secrets.VITE_STORAGE_SECRET }}
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_USE_MOCK: ${{ vars.VITE_USE_MOCK }}
+          VITE_BASE_PATH: /
         run: npm run build
 
-      - name: Upload artifact
+      # ── Publish ──
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
