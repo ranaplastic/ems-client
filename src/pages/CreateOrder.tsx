@@ -94,7 +94,7 @@ export default function CreateOrder() {
     const payload: CreateOrderRequest = {
       clientId: client!.clientId,
       date,
-      orderBooks: lines.map((l) => ({
+      items: lines.map((l) => ({
         productId: Number(l.productId),
         quantity: Number(l.quantity),
         rate: Number(l.rate),
@@ -176,14 +176,15 @@ export default function CreateOrder() {
                     onChange={(e) => updateLine(line.key, { quantity: e.target.value })}
                   />
                 </Field>
-                <Field label="Rate" required>
+                <Field label="Rate">
                   <Input
                     type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
                     value={line.rate}
-                    onChange={(e) => updateLine(line.key, { rate: e.target.value })}
+                    readOnly
+                    disabled
+                    tabIndex={-1}
+                    aria-readonly="true"
+                    className="cursor-not-allowed bg-slate-100 text-slate-600"
                   />
                 </Field>
               </div>

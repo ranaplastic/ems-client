@@ -125,7 +125,7 @@ export const mockAdapter: AxiosAdapter = (config) => {
       status: 'CREATED',
       paidAmount: 0,
       totalAmount: 0,
-      orderBooks: body.orderBooks.map((line) => {
+      orderBooks: body.items.map((line) => {
         const product = mockProducts.find((p) => p.productId === line.productId);
         const lineTotal = Number((line.quantity * line.rate).toFixed(2));
         return {
